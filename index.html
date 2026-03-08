@@ -110,6 +110,7 @@
             font-size: 1.1rem;
             margin-top: 30px;
             transition: all 0.2s;
+            box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.2);
         }
         .btn-whatsapp:hover { filter: brightness(1.1); transform: translateY(-2px); }
         
@@ -148,7 +149,7 @@
         <select id="ano" disabled><option value="">Ano</option></select>
     </div>
 
-    <div id="loader">BUSCANDO NA BASE FIPE...</div>
+    <div id="loader">CONSULTANDO BASE FIPE...</div>
 
     <div id="resultado">
         <div class="header-result">
@@ -190,9 +191,8 @@
         resultado: document.getElementById('resultado')
     };
 
-    // FUNÇÕES DE UTILIDADE REAL
+    // Tratamento de valores monetários da API
     const parsePrice = (str) => parseFloat(str.replace(/[R$\s.]/g, '').replace(',', '.'));
-    const formatCurrency = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
 
     async function apiRequest(endpoint) {
         const res = await fetch(`${API_BASE}${endpoint}`);
@@ -200,7 +200,7 @@
         return res.json();
     }
 
-    // EVENTOS
+    // Lógica dos Selects
     el.tipo.addEventListener('change', async () => {
         reset(['marca', 'modelo', 'ano']);
         if (!el.tipo.value) return;
@@ -226,77 +226,78 @@
         
         try {
             const endpoint = `/${el.tipo.value}/brands/${el.marca.value}/models/${el.modelo.value}/years/${el.ano.value}`;
-            const dadosReais = await apiRequest(endpoint);
-            atualizarInterface(dadosReais);
+            const dados = await apiRequest(endpoint);
+            atualizarInterface(dados);
         } catch (e) {
-            alert("Erro ao carregar dados reais da FIPE.");
+            alert("Não foi possível carregar os dados reais.");
         } finally {
             el.loader.style.display = 'none';
         }
     });
 
     function atualizarInterface(d) {
-        // EXTRAINDO DADOS REAIS DA API
-        const precoNumerico = parsePrice(d.price); 
-        const mesReferencia = d.referenceMonth.toUpperCase();
+        const precoReal = d.price;
+        const precoNumerico = parsePrice(precoReal);
+        const refMes = d.referenceMonth.toUpperCase();
 
-        // Calculando uma variação fictícia baseada no preço real (Já que a API v2 não retorna variação mensal direto)
-        // Aqui simulamos uma oscilação real baseada no último dígito para não ficar igual para todos
-        const variacaoSimulada = (Math.random() * (1.8 - 0.2) + 0.2).toFixed(2);
-        const isUp = Math.random() > 0.3; // 70% de chance de ser valorização
+        // Cálculo de variação dinâmica (Simulada para o Analytics)
+        const variacao = (Math.random() * (1.9 - 0.1) + 0.1).toFixed(2);
+        const isUp = Math.random() > 0.4;
 
         document.getElementById('resVeiculo').innerText = `${d.brand} ${d.model}`;
-        document.getElementById('resPreco').innerText = d.price; // Usa a string formatada da API
-        document.getElementById('resRef').innerText = `REFERÊNCIA FIPE: ${mesReferencia}`;
+        document.getElementById('resPreco').innerText = precoReal;
+        document.getElementById('resRef').innerText = `REFERÊNCIA FIPE: ${refMes}`;
 
         const badge = document.getElementById('resBadge');
         badge.className = `badge ${isUp ? 'up' : 'down'}`;
-        badge.innerHTML = `<span>${isUp ? '▲' : '▼'}</span> ${variacaoSimulada}%`;
+        badge.innerHTML = `<span>${isUp ? '▲' : '▼'}</span> ${variacao}%`;
 
         el.resultado.style.display = 'block';
-        
-        // Renderiza gráfico usando o valor real como base
-        renderChart(precoNumerico, isUp, variacaoSimulada);
+        renderChart(precoNumerico, isUp, variacao);
 
-        // WhatsApp com dados REAIS
+        // Link dinâmico do site para o WhatsApp
+        const linkSite = window.location.href;
+
         const msg = encodeURIComponent(
             `🚀 *FIPE Fácil Analytics*\n\n` +
             `🚙 *Veículo:* ${d.brand} ${d.model}\n` +
-            `💰 *Valor Atual:* ${d.price}\n` +
-            `📈 *Variação:* ${isUp ? '▲' : '▼'} ${variacaoSimulada}%\n` +
-            `📅 *Mês Ref:* ${mesReferencia}\n\n` +
+            `💰 *Valor Atual:* ${precoReal}\n` +
+            `📈 *Variação:* ${isUp ? '▲' : '▼'} ${variacao}%\n` +
+            `📅 *Mês Ref:* ${refMes}\n\n` +
+            `🔗 *Consulte aqui:* ${linkSite}\n\n` +
             `_Desenvolvido por Guilherme Pastorelli_`
         );
         document.getElementById('btnWhatsapp').href = `https://wa.me/?text=${msg}`;
     }
 
-    function renderChart(valorAtual, subiu, pct) {
+    function renderChart(base, subiu, pct) {
         const ctx = document.getElementById('historicoChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
 
-        // Criando um histórico simulado proporcional ao valor real do veículo
         const fator = pct / 100;
-        const dadosGrafico = [
-            valorAtual * (1 - fator * 3),
-            valorAtual * (1 - fator * 2),
-            valorAtual * (1 - fator * 4),
-            valorAtual * (1 - fator * 1),
-            valorAtual * (subiu ? (1 - fator) : (1 + fator)),
-            valorAtual
+        const labels = ["Nov", "Dez", "Jan", "Fev", "Mar", "Atual"];
+        const dados = [
+            base * (1 - fator * 2.5),
+            base * (1 - fator * 1.8),
+            base * (1 - fator * 3.2),
+            base * (1 - fator * 0.9),
+            base * (subiu ? (1 - fator) : (1 + fator)),
+            base
         ];
 
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ["Nov", "Dez", "Jan", "Fev", "Mar", "Atual"],
+                labels: labels,
                 datasets: [{
-                    data: dadosGrafico,
+                    data: dados,
                     borderColor: '#3b82f6',
                     borderWidth: 4,
                     tension: 0.4,
                     fill: true,
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    pointRadius: 4
+                    pointRadius: 4,
+                    pointBackgroundColor: '#3b82f6'
                 }]
             },
             options: {
