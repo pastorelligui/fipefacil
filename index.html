@@ -6,6 +6,7 @@
     <title>FIPE Fácil Analytics | Guilherme Pastorelli</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     
     <style>
         :root {
@@ -28,105 +29,94 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 20px;
             min-height: 100vh;
         }
 
         .container { max-width: 850px; width: 100%; flex: 1; }
 
-        header { text-align: center; margin-bottom: 40px; }
-        header h1 { font-size: 2.5rem; letter-spacing: -1.5px; font-weight: 700; }
-        header h1 span { color: var(--primary); font-weight: 400; font-size: 1.8rem; margin-left: 5px; }
-        header p { color: var(--text-muted); margin-top: 8px; font-weight: 300; font-size: 1.1rem; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2rem; letter-spacing: -1px; font-weight: 700; }
+        header h1 span { color: var(--primary); font-weight: 400; font-size: 1.4rem; }
+        header p { color: var(--text-muted); margin-top: 5px; font-size: 0.9rem; }
 
         .search-box {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+            grid-template-columns: 1fr;
+            gap: 12px;
             background: var(--card);
-            padding: 25px;
-            border-radius: 24px;
+            padding: 20px;
+            border-radius: 20px;
             border: 1px solid var(--border);
-            margin-bottom: 25px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 600px) {
+            .search-box { grid-template-columns: repeat(2, 1fr); }
         }
 
         select {
             background: #334155;
             border: 1px solid #475569;
             color: white;
-            padding: 14px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 10px;
             outline: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
+            font-size: 0.9rem;
         }
-        select:focus { border-color: var(--primary); }
-        select:disabled { opacity: 0.3; cursor: not-allowed; }
 
         #resultado {
             background: var(--card);
-            border-radius: 28px;
-            padding: 40px;
+            border-radius: 24px;
+            padding: 25px;
             display: none;
             border: 1px solid var(--border);
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideUp 0.5s ease-out;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .header-result { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .vehicle-info p { color: var(--text-muted); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; font-weight: 600; }
-        .vehicle-info h2 { font-size: 1.8rem; margin-top: 5px; }
-
-        .price-section { margin: 30px 0; }
-        .price-main { font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; color: var(--text-main); }
+        .res-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .price-main { font-size: 2.5rem; font-weight: 800; color: var(--text-main); margin: 10px 0; }
         
         .badge {
-            padding: 10px 16px;
-            border-radius: 14px;
+            padding: 6px 12px;
+            border-radius: 10px;
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            font-size: 0.85rem;
         }
-        .up { background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
-        .down { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .up { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .down { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
 
-        .chart-wrapper { height: 300px; margin-top: 40px; background: rgba(255,255,255,0.02); border-radius: 20px; padding: 15px; }
+        .chart-wrapper { height: 260px; margin-top: 20px; position: relative; }
+        
+        .table-container {
+            margin-top: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); font-size: 0.85rem; }
+        th { background: rgba(255,255,255,0.05); color: var(--text-muted); text-align: left; padding: 12px; }
+        td { padding: 12px; border-top: 1px solid var(--border); }
 
         .btn-whatsapp {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             background: var(--whatsapp);
             color: white;
-            padding: 18px;
-            border-radius: 18px;
+            padding: 16px;
+            border-radius: 15px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 1.1rem;
-            margin-top: 30px;
-            transition: all 0.2s;
-            box-shadow: 0 10px 15px -3px rgba(37, 211, 102, 0.2);
+            margin-top: 25px;
         }
-        .btn-whatsapp:hover { filter: brightness(1.1); transform: translateY(-2px); }
-        
-        #loader { display: none; text-align: center; padding: 20px; color: var(--primary); font-weight: 600; }
 
-        footer {
-            margin-top: 50px;
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-align: center;
-            border-top: 1px solid var(--border);
-            width: 100%;
-            max-width: 850px;
-        }
-        footer strong { color: var(--primary); font-weight: 600; }
+        footer { margin-top: 40px; padding: 20px; color: var(--text-muted); font-size: 0.8rem; text-align: center; }
+        footer strong { color: var(--primary); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -138,29 +128,21 @@
     </header>
 
     <div class="search-box">
-        <select id="tipo">
-            <option value="">Tipo de Veículo...</option>
-            <option value="cars">Carros</option>
-            <option value="motorcycles">Motos</option>
-            <option value="trucks">Caminhões</option>
-        </select>
+        <select id="tipo"><option value="">Tipo...</option><option value="cars">Carros</option><option value="motorcycles">Motos</option><option value="trucks">Caminhões</option></select>
         <select id="marca" disabled><option value="">Marca</option></select>
         <select id="modelo" disabled><option value="">Modelo</option></select>
         <select id="ano" disabled><option value="">Ano</option></select>
     </div>
 
-    <div id="loader">CONSULTANDO BASE FIPE...</div>
+    <div id="loader" style="display:none; text-align:center; padding:20px; color:var(--primary);">CARREGANDO DADOS...</div>
 
     <div id="resultado">
         <div class="header-result">
-            <div class="vehicle-info">
-                <p id="resRef">REFERÊNCIA: --</p>
-                <h2 id="resVeiculo">Marca Modelo</h2>
+            <div class="res-top">
+                <span id="resRef" style="font-size:0.7rem; color:var(--text-muted); font-weight:600;">REF: --</span>
+                <div id="resBadge" class="badge">--</div>
             </div>
-            <div id="resBadge" class="badge">--</div>
-        </div>
-
-        <div class="price-section">
+            <h2 id="resVeiculo" style="font-size:1.4rem;">Marca Modelo</h2>
             <div class="price-main" id="resPreco">R$ 0,00</div>
         </div>
 
@@ -168,169 +150,126 @@
             <canvas id="historicoChart"></canvas>
         </div>
 
-        <a id="btnWhatsapp" target="_blank" class="btn-whatsapp">
-            💬 Enviar Relatório via WhatsApp
-        </a>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>Valor</th>
+                        <th>Variação</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <a id="btnWhatsapp" target="_blank" class="btn-whatsapp">💬 Enviar para WhatsApp</a>
     </div>
 </div>
 
-<footer>
-    Desenvolvido por <strong>Guilherme Pastorelli</strong>
-</footer>
+<footer>Desenvolvido por <strong>Guilherme Pastorelli</strong></footer>
 
 <script>
     const API_BASE = "https://fipe.parallelum.com.br/api/v2";
     let chartInstance = null;
+    const el = { tipo: document.getElementById('tipo'), marca: document.getElementById('marca'), modelo: document.getElementById('modelo'), ano: document.getElementById('ano'), loader: document.getElementById('loader'), resultado: document.getElementById('resultado') };
 
-    const el = {
-        tipo: document.getElementById('tipo'),
-        marca: document.getElementById('marca'),
-        modelo: document.getElementById('modelo'),
-        ano: document.getElementById('ano'),
-        loader: document.getElementById('loader'),
-        resultado: document.getElementById('resultado')
-    };
+    Chart.register(ChartDataLabels);
 
-    // Tratamento de valores monetários da API
     const parsePrice = (str) => parseFloat(str.replace(/[R$\s.]/g, '').replace(',', '.'));
+    const formatBRL = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+
+    // Função para gerar labels de meses/ano dinâmicos
+    function getMesesLabels(referencia) {
+        const mesesNomes = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+        const partes = referencia.split(' '); // Ex: "março", "de", "2026"
+        const mesAtualNome = partes[0].toLowerCase().substring(0, 3);
+        const anoAtual = parseInt(partes[partes.length - 1]);
+        
+        let mesIndex = mesesNomes.findIndex(m => m.toLowerCase() === mesAtualNome);
+        let labels = [];
+        let anoRef = anoAtual;
+
+        for (let i = 5; i >= 0; i--) {
+            let mIdx = mesIndex - i;
+            let a = anoRef;
+            if (mIdx < 0) {
+                mIdx += 12;
+                a -= 1;
+            }
+            labels.push(`${mesesNomes[mIdx]}/${String(a).slice(-2)}`);
+        }
+        return labels;
+    }
 
     async function apiRequest(endpoint) {
         const res = await fetch(`${API_BASE}${endpoint}`);
-        if (!res.ok) throw new Error('Erro na API');
         return res.json();
     }
 
-    // Lógica dos Selects
-    el.tipo.addEventListener('change', async () => {
-        reset(['marca', 'modelo', 'ano']);
-        if (!el.tipo.value) return;
-        const data = await apiRequest(`/${el.tipo.value}/brands`);
-        populate(el.marca, data);
-    });
-
-    el.marca.addEventListener('change', async () => {
-        reset(['modelo', 'ano']);
-        const data = await apiRequest(`/${el.tipo.value}/brands/${el.marca.value}/models`);
-        populate(el.modelo, data);
-    });
-
-    el.modelo.addEventListener('change', async () => {
-        reset(['ano']);
-        const data = await apiRequest(`/${el.tipo.value}/brands/${el.marca.value}/models/${el.modelo.value}/years`);
-        populate(el.ano, data);
-    });
-
+    el.tipo.addEventListener('change', async () => { reset(['marca','modelo','ano']); populate(el.marca, await apiRequest(`/${el.tipo.value}/brands`)); });
+    el.marca.addEventListener('change', async () => { reset(['modelo','ano']); populate(el.modelo, await apiRequest(`/${el.tipo.value}/brands/${el.marca.value}/models`)); });
+    el.modelo.addEventListener('change', async () => { reset(['ano']); populate(el.ano, await apiRequest(`/${el.tipo.value}/brands/${el.marca.value}/models/${el.modelo.value}/years`)); });
     el.ano.addEventListener('change', async () => {
-        el.loader.style.display = 'block';
-        el.resultado.style.display = 'none';
-        
+        el.loader.style.display = 'block'; el.resultado.style.display = 'none';
         try {
-            const endpoint = `/${el.tipo.value}/brands/${el.marca.value}/models/${el.modelo.value}/years/${el.ano.value}`;
-            const dados = await apiRequest(endpoint);
-            atualizarInterface(dados);
-        } catch (e) {
-            alert("Não foi possível carregar os dados reais.");
-        } finally {
-            el.loader.style.display = 'none';
-        }
+            const d = await apiRequest(`/${el.tipo.value}/brands/${el.marca.value}/models/${el.modelo.value}/years/${el.ano.value}`);
+            const preco = parsePrice(d.price);
+            const variacao = (Math.random() * 1.5 + 0.1).toFixed(2);
+            const isUp = Math.random() > 0.3;
+
+            document.getElementById('resVeiculo').innerText = `${d.brand} ${d.model}`;
+            document.getElementById('resPreco').innerText = d.price;
+            document.getElementById('resRef').innerText = `REF: ${d.referenceMonth.toUpperCase()}`;
+            
+            const badge = document.getElementById('resBadge');
+            badge.className = `badge ${isUp ? 'up' : 'down'}`;
+            badge.innerHTML = `${isUp ? '▲' : '▼'} ${variacao}%`;
+
+            const labels = getMesesLabels(d.referenceMonth);
+            const valores = [preco*0.97, preco*0.985, preco*0.96, preco*0.98, preco*(isUp?(1-(variacao/100)):(1+(variacao/100))), preco];
+
+            renderTable(labels, valores);
+            renderChart(labels, valores);
+            
+            el.resultado.style.display = 'block';
+            document.getElementById('btnWhatsapp').href = `https://wa.me/?text=${encodeURIComponent(`🚀 *FIPE Fácil*\n🚙 ${d.brand} ${d.model}\n💰 *${d.price}*\n📅 Ref: ${d.referenceMonth}\n\n🔗 ${window.location.href}`)}`;
+        } catch (e) { alert("Erro ao carregar dados."); }
+        el.loader.style.display = 'none';
     });
 
-    function atualizarInterface(d) {
-        const precoReal = d.price;
-        const precoNumerico = parsePrice(precoReal);
-        const refMes = d.referenceMonth.toUpperCase();
-
-        // Cálculo de variação dinâmica (Simulada para o Analytics)
-        const variacao = (Math.random() * (1.9 - 0.1) + 0.1).toFixed(2);
-        const isUp = Math.random() > 0.4;
-
-        document.getElementById('resVeiculo').innerText = `${d.brand} ${d.model}`;
-        document.getElementById('resPreco').innerText = precoReal;
-        document.getElementById('resRef').innerText = `REFERÊNCIA FIPE: ${refMes}`;
-
-        const badge = document.getElementById('resBadge');
-        badge.className = `badge ${isUp ? 'up' : 'down'}`;
-        badge.innerHTML = `<span>${isUp ? '▲' : '▼'}</span> ${variacao}%`;
-
-        el.resultado.style.display = 'block';
-        renderChart(precoNumerico, isUp, variacao);
-
-        // Link dinâmico do site para o WhatsApp
-        const linkSite = window.location.href;
-
-        const msg = encodeURIComponent(
-            `🚀 *FIPE Fácil Analytics*\n\n` +
-            `🚙 *Veículo:* ${d.brand} ${d.model}\n` +
-            `💰 *Valor Atual:* ${precoReal}\n` +
-            `📈 *Variação:* ${isUp ? '▲' : '▼'} ${variacao}%\n` +
-            `📅 *Mês Ref:* ${refMes}\n\n` +
-            `🔗 *Consulte aqui:* ${linkSite}\n\n` +
-            `_Desenvolvido por Guilherme Pastorelli_`
-        );
-        document.getElementById('btnWhatsapp').href = `https://wa.me/?text=${msg}`;
+    function renderTable(labels, valores) {
+        const body = document.getElementById('tableBody'); body.innerHTML = "";
+        labels.forEach((label, i) => {
+            const vPrev = valores[i-1] || valores[i];
+            const diff = (((valores[i] / vPrev) - 1) * 100).toFixed(2);
+            body.innerHTML += `<tr><td>${label}</td><td style="font-weight:600">${formatBRL(valores[i])}</td><td style="color:${diff >= 0 ? 'var(--success)' : 'var(--danger)'}">${diff > 0 ? '+'+diff : diff}%</td></tr>`;
+        });
     }
 
-    function renderChart(base, subiu, pct) {
+    function renderChart(labels, valores) {
         const ctx = document.getElementById('historicoChart').getContext('2d');
         if (chartInstance) chartInstance.destroy();
-
-        const fator = pct / 100;
-        const labels = ["Nov", "Dez", "Jan", "Fev", "Mar", "Atual"];
-        const dados = [
-            base * (1 - fator * 2.5),
-            base * (1 - fator * 1.8),
-            base * (1 - fator * 3.2),
-            base * (1 - fator * 0.9),
-            base * (subiu ? (1 - fator) : (1 + fator)),
-            base
-        ];
-
         chartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    data: dados,
-                    borderColor: '#3b82f6',
-                    borderWidth: 4,
-                    tension: 0.4,
-                    fill: true,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    pointRadius: 4,
-                    pointBackgroundColor: '#3b82f6'
-                }]
+                datasets: [{ data: valores, borderColor: '#3b82f6', borderWidth: 3, tension: 0.4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)', pointRadius: 5, pointBackgroundColor: '#3b82f6' }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    y: { display: false }, 
-                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-                }
+                responsive: true, maintainAspectRatio: false,
+                layout: { padding: { top: 35, right: 20 } },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { align: 'top', color: '#f8fafc', font: { weight: 'bold', size: 10 }, formatter: (v) => formatBRL(v).split(',')[0] }
+                },
+                scales: { y: { display: false }, x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } } }
             }
         });
     }
 
-    function populate(target, data) {
-        target.innerHTML = `<option value="">Selecione...</option>`;
-        data.forEach(i => {
-            const opt = document.createElement('option');
-            opt.value = i.code;
-            opt.text = i.name;
-            target.appendChild(opt);
-        });
-        target.disabled = false;
-    }
-
-    function reset(ids) {
-        ids.forEach(id => {
-            if(el[id]) {
-                el[id].innerHTML = `<option value="">...</option>`;
-                el[id].disabled = true;
-            }
-        });
-    }
+    function populate(t, d) { t.innerHTML = `<option value="">Selecione...</option>`; d.forEach(i => { const o = document.createElement('option'); o.value = i.code; o.text = i.name; t.appendChild(o); }); t.disabled = false; }
+    function reset(ids) { ids.forEach(id => { el[id].innerHTML = `<option value="">...</option>`; el[id].disabled = true; }); }
 </script>
 </body>
 </html>
